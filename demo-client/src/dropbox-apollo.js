@@ -8,7 +8,6 @@ import { withClientState } from "apollo-link-state";
 import { createHttpLink } from "apollo-link-http";
 
 import { resolvers } from "./common-src/resolvers";
-import { typeDefs } from "./common-src/schema";
 
 export const createDropboxApolloClient = ({
   dropboxAccessToken,
@@ -27,8 +26,7 @@ export const createDropboxApolloClient = ({
     };
   });
   const cache = new InMemoryCache();
-  const stateLink = withClientState({ cache, resolvers, typeDefs });
-  console.log("typeDefs", typeDefs);
+  const stateLink = withClientState({ cache, resolvers });
 
   const apolloLinks = [dropboxApolloLink, stateLink];
 

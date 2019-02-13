@@ -5,14 +5,15 @@ export const resolvers = {
     filesListFolder: async (obj, args, context, info) => {
       // TODO: automatically wrap each resolver in a try/stringify-error-catch
       try {
+        console.log("Query.filesListFolder resolver");
         const dropboxAPI = getDropboxAPI(context);
-        console.log("running filesListFolder");
         const apiResult = await dropboxAPI.filesListFolder({
           path: !!args.path ? args.path : ""
         });
         console.log(apiResult);
         return apiResult.entries.map(entry => ({
           ...entry,
+          tag: entry[".tag"],
           __typename: "FileEntry"
         }));
       } catch (err) {
@@ -24,7 +25,8 @@ export const resolvers = {
   // This describes fields to *ADD IN* to the ones supplied
   FileEntry: {
     revisions: async (fileEntry, args, context, info) => {
-      if (fileEntry[".tag"] !== "file") {
+      console.log("FileEntry.revisions resolver");
+      if (fileEntry.tag !== "file") {
         return [];
       }
       const dropboxAPI = getDropboxAPI(context);
@@ -32,8 +34,8 @@ export const resolvers = {
         path: fileEntry.id
       });
       return fileListRevisionsApiResponse.entries.map(entry => ({
-        id: entry.rev,
         ...entry,
+        id: entry.rev,
         __typename: "FileRevision"
       }));
     }
@@ -41,9 +43,10 @@ export const resolvers = {
 
   FileRevision: {
     temporaryDownloadLink: async (fileRevision, args, context, info) => {
+      console.log("FileRevision.temporaryDownloadLink resolver");
       const dropboxAPI = getDropboxAPI(context);
       const temporaryLinkApiResponse = await dropboxAPI.filesGetTemporaryLink({
-        path: `rev:${fileRevision.rev}`
+        path: `rev:${fileRevision.id}`
       });
       return temporaryLinkApiResponse.link;
     }

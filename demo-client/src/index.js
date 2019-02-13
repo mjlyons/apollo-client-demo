@@ -9,7 +9,8 @@ import { createDropboxApolloClient } from "./dropbox-apollo";
 import { DROPBOX_ACCESS_TOKEN } from "./common-src/.env";
 
 const dropboxApolloClient = createDropboxApolloClient({
-  dropboxAccessToken: DROPBOX_ACCESS_TOKEN
+  dropboxAccessToken: DROPBOX_ACCESS_TOKEN,
+  enableGqlServer: true // Note: @client in query may prevent use of server.
 });
 
 ReactDOM.render(

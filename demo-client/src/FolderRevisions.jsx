@@ -8,10 +8,11 @@ const FILES_LIST_FOLDER_QUERY = gql`
     filesListFolder(path: $path) @client {
       id
       name
+      tag
       revisions {
-        rev
+        id
         server_modified
-        temporaryDownloadLink
+        temporaryDownloadLink @client
       }
     }
   }
@@ -50,7 +51,7 @@ const FileRevisions = ({ revisions }) => (
   <div className="fileRevisions">
     {revisions.map(revision => (
       <DownloadLink
-        key={revision.rev}
+        key={revision.id}
         {...pick(revision, ["server_modified", "temporaryDownloadLink"])}
       />
     ))}

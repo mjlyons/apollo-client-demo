@@ -22,6 +22,10 @@ export const typeDefs = gql`
     Folders do not have any revisions.
     """
     revisions: [FileRevision!]!
+    """
+    Defines type of file entry (file, folder)
+    """
+    tag: String!
   }
 
   """
@@ -29,7 +33,6 @@ export const typeDefs = gql`
   """
   type FileRevision {
     id: ID!
-    rev: String!
     server_modified: String!
     temporaryDownloadLink: String!
   }
