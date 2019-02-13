@@ -12,7 +12,7 @@ const FILES_LIST_FOLDER_QUERY = gql`
       revisions {
         id
         server_modified
-        temporaryDownloadLink @client
+        temporaryDownloadLink
       }
     }
   }

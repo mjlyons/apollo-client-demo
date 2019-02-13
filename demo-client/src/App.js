@@ -7,12 +7,18 @@ class App extends Component {
     return (
       <div className="App">
         <FolderRevisionsWithData />
+
+        {/* Uncomment below to render a subfolder */}
+        {/* 
         <hr />
         <FolderRevisionsWithData path="/pdfs" />
+        */}
 
-        {/* Loading from root again to see if it triggers additional APIv2 requests -- it shouldn't */}
+        {/* Loading from root again to see if it triggers additional Dropbox API requests -- it shouldn't */}
+        {/* 
         <hr />
         <FolderRevisionsWithData />
+        */}
       </div>
     );
   }
