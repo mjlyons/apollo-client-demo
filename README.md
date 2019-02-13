@@ -8,11 +8,11 @@ The GraphQL-to-REST-API decomposition can happen:
 2. Purely on the server (as one GraphQL request)
 3. As a mix of the two _for the same query_ (executing some resolvers on the server and the rest on the client)
 
-This approach reuses the same resolver code on the client and server. You don't need implement the GraphQL-to-REST-API decomposition logic twice.
+This approach reuses the same resolver code on the client and server. You don't need to implement the GraphQL-to-REST-API decomposition logic twice.
 
-You can also use feature gating to extend #3 to gradually roll out use of a GraphQL resolver from the client to server.
+You can also use feature gating to extend #3 to gradually transition use of a GraphQL resolver from the client to server.
 
-More on both of these topics use cases toward the end of the README.
+More on both of these use cases toward the end of the README.
 
 ## Tooling
 
@@ -78,7 +78,7 @@ source code, the web client, or GraphQL server will have full read & write acces
 
 __Clone this repo:__
 ```
-git clone git@github.com:mjlyons/apollo-client-demo.git && cd apollo-client-demo
+git clone https://github.com/mjlyons/apollo-client-demo.git && cd apollo-client-demo
 ```
 
 __Configure your Dropbox App:__
@@ -121,7 +121,7 @@ This will open the web client in your browser. You should see an entry for each 
 __Set up the server (optional):__
 You only need to set the server up if you want to run some or all of your query outside of the client (options 2 & 3 at start of README).
 ```
-cd apollo-client-demo/demo-server
+cd ../demo-server
 yarn install
 yarn start
 ```
@@ -152,19 +152,19 @@ This should return the same data rendered in the client install instructions.
 ### Running without a GraphQL server
 
 By default, the web client will translate the GraphQL query locally and make Dropbox REST API requests.
-It does not use the GraphQL server.
+It does not use the GraphQL server. Stop running the server and try loading the page. It still loads.
 
-In Chrome, open the "network" tab and refresh the page. You should see the Dropbox API requests `list_folder`, `list_revisions`, and `get_temporary_link`. If you installed Apollo Dev Tools, you may see `graphql`
+Let's check what Dropbox REST API requests are sent by the client. In Chrome, open the "network" tab and refresh the page. You should see the Dropbox API requests `list_folder`, `list_revisions`, and `get_temporary_link`. If you installed Apollo Dev Tools, you may see `graphql`
 requests which are unrelated to the what's powering the web client UX.
 
 ### REST API request parallelism
 
-In the newtwork tab, find the Waterfall toward the right. You might need to make your browser window wider
-to see it. You'll notice that the Dropbox REST API calls are parallelizing. For example, as soon as the `list_folder` call returns with the list of files, `list_revisions` is called for each file simultaneously. This happens again when the `list_revisions` call returns and `get_tempoprary_link` is sent for each revision.
+In the "network" tab, find the Waterfall toward the right. You might need to make your browser window wider
+to see it. You'll notice that the Dropbox REST API calls are parallelizing. As soon as the `list_folder` call returns with the list of files, `list_revisions` is called for each file simultaneously. This happens again when the `list_revisions` calls return and `get_tempoprary_link` is sent for each revision.
 
-## Using Apollo Client Devtools without a GraphQL server
+### Using Apollo Client Devtools without a GraphQL server
 
-Switch to the "Apollo" tab (you'll have to install [Apollo Client Devtools](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm) in Chrome first). Click the "Queries" icon first -- you should be able to see the FolderRevisions GraphQL query powering the UX. Click the "Cache" icon next -- you should see cached entries for the root query, each FileEntry (represents a file) and each FileRevision (represents a revision of a file).
+First, make sure you've installed [Apollo Client Devtools](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm) in Chrome. Then switch to the "Apollo" tab  and click the "Queries" icon. You should see the FolderRevisions GraphQL query powering the UX. Click the "Cache" icon next. You should see cached entries for the root query, each FileEntry (represents a file) and each FileRevision (represents a revision of a file).
 
 ### REST API response caching
 
@@ -188,12 +188,14 @@ and uncomment it to look like this:
 <FolderRevisionsWithData />
 ```
 
-When you save and reload, you'll notice that you see the contents of the folder twice, but there are no additional network requests in the "network" tab. Apollo Client is correctly caching the responses and
+When you save and reload, you'll see the contents of the folder twice. However, there are no additional network requests in the "network" tab. Apollo Client is correctly caching the responses and
 preventing unnecessary network requests.
 
 ### Switching to the GraphQL server
 
-Translating the GraphQL query to REST API requests on the client has a downside: you need to make multiple round trips to load your data. To switch to the GraphQL server, start the server and remove the `@client` directive from the GraphQL query.
+Translating the GraphQL query to REST API requests on the client has a downside: you need to make multiple round trips to load your data. Switching to the GraphQL server will shrink the client's network roundtrips down to one request. 
+
+To switch to the GraphQL server, start the server and remove the `@client` directive from the GraphQL query.
 
 In __demo-client/src/FolderRevisions.jsx__ find the query:
 
@@ -261,6 +263,7 @@ const FILES_LIST_FOLDER_QUERY = gql`
     }
   }
 `;
+```
 
 If you save this change, reload, and watch the "network" tab, you'll notice the graphql query to http://localhost:4000 only includes the following:
 
@@ -275,13 +278,13 @@ query FolderRevisions($path: String) {
 }
 ```
 
-You'll also see the client is making `list_revisions` and `get_temporary_link` calls again.
+You'll also see the client is making `list_revisions` and `get_temporary_link` REST API calls again.
 
 
-## Gradually ramping up traffic to your GraphQL server
+### Gradually ramping up traffic to your GraphQL server
 
-You could extend this to ramp up traffic to a specific resolver rather than switching from 0% to 100%. Using feature gating, you could start by removing the @client directive for a small percentage of clients. As you feel more comfortable sending more traffic to the server's resolver you would adjust the feature gate to remove the @client directive for more clients up to 100%.
+You could extend the "gradual rolllout" approach to ramp up traffic to a specific resolver rather than switching from 0% to 100%. Using feature gating, you'd start by removing the @client directive for a small percentage of clients. As you feel more comfortable sending additional traffic to the server's resolver you would adjust the feature gate to remove the @client directive for more clients. Eventually you'll be out to 100% and fully rolled out.
 
 ### Reusing the same resolver code on client and server
 
-The code to decompose GraphQL into REST API calls is shared between client & server in `common-src/resolvers.mjs`. You're using the same code if you're only using the client, only using the server, or using a mix of both. This means you don't need to do write any new code to move parts of your GraphQL schema from the client to a GraphQL server.
+The code to decompose GraphQL into REST API calls is shared between client & server in `common-src/resolvers.mjs`. You don't need to do write any new code to move parts of your GraphQL schema from the client to a GraphQL server.
