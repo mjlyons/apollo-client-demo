@@ -5,12 +5,17 @@ import { setContext } from "apollo-link-context";
 import { InMemoryCache } from "apollo-cache-inmemory";
 import { ApolloLink } from "apollo-link";
 import { withClientState } from "apollo-link-state";
+import { createHttpLink } from "apollo-link-http";
 
-import { resolvers } from "./resolvers";
+import { resolvers } from "./common-src/resolvers";
+import { typeDefs } from "./common-src/schema";
 
-export const createDropboxApolloClient = dropboxAccessToken => {
+export const createDropboxApolloClient = ({
+  dropboxAccessToken,
+  enableGqlServer
+}) => {
   // DROPBOX API
-  const dropboxClient = new Dropbox({
+  const dropboxAPI = new Dropbox({
     accessToken: dropboxAccessToken,
     fetch
   });
@@ -18,14 +23,21 @@ export const createDropboxApolloClient = dropboxAccessToken => {
   // Create Apollo client
   const dropboxApolloLink = setContext(() => {
     return {
-      dropboxClient
+      dataSources: { dropboxAPI }
     };
   });
   const cache = new InMemoryCache();
-  const stateLink = withClientState({ cache, resolvers /*, defaults*/ });
+  const stateLink = withClientState({ cache, resolvers, typeDefs });
+  console.log("typeDefs", typeDefs);
+
+  const apolloLinks = [dropboxApolloLink, stateLink];
+
+  if (enableGqlServer) {
+    apolloLinks.push(createHttpLink({ uri: "http://localhost:4000" }));
+  }
 
   const apolloClient = new ApolloClient({
-    link: ApolloLink.from([dropboxApolloLink, stateLink]),
+    link: ApolloLink.from(apolloLinks),
     cache
   });
 

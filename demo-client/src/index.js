@@ -6,9 +6,11 @@ import * as serviceWorker from "./serviceWorker";
 
 import { ApolloProvider } from "react-apollo";
 import { createDropboxApolloClient } from "./dropbox-apollo";
-import { DROPBOX_ACCESS_TOKEN } from "./.env.js";
+import { DROPBOX_ACCESS_TOKEN } from "./common-src/.env";
 
-const dropboxApolloClient = createDropboxApolloClient(DROPBOX_ACCESS_TOKEN);
+const dropboxApolloClient = createDropboxApolloClient({
+  dropboxAccessToken: DROPBOX_ACCESS_TOKEN
+});
 
 ReactDOM.render(
   <ApolloProvider client={dropboxApolloClient}>

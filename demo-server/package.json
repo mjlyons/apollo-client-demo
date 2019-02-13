@@ -1,0 +1,16 @@
+{
+  "name": "demo-server",
+  "version": "1.0.0",
+  "main": "src/index.mjs",
+  "license": "None",
+  "dependencies": {
+    "apollo-server": "^2.4.0",
+    "dropbox": "^4.0.16",
+    "graphql-tag": "^2.10.1",
+    "node-fetch": "^2.3.0",
+    "nodemon": "^1.18.10"
+  },
+  "scripts": {
+    "start": "nodemon --preserve-symlinks --experimental-modules src/index.mjs"
+  }
+}

@@ -8,7 +8,7 @@ const FILES_LIST_FOLDER_QUERY = gql`
     filesListFolder(path: $path) @client {
       id
       name
-      FileRevisions {
+      revisions {
         rev
         server_modified
         temporaryDownloadLink
@@ -42,7 +42,7 @@ const FolderRevisions = ({ fileEntries }) => (
 const FileEntry = ({ fileEntry }) => (
   <div className="fileEntry">
     <div className="fileName">{fileEntry.name}</div>
-    <FileRevisions revisions={fileEntry.FileRevisions} />
+    <FileRevisions revisions={fileEntry.revisions} />
   </div>
 );
 
