@@ -22,6 +22,27 @@ export const resolvers = {
     }
   },
 
+  Mutation: {
+    filesMove: async (obj, args, context, info) => {
+      try {
+        console.log("Mutation.filesMove resolver");
+        const dropboxAPI = getDropboxAPI(context);
+        const apiResult = await dropboxAPI.filesMove({
+          from_path: args.fromPath,
+          to_path: args.toPath
+        });
+        console.log(apiResult);
+        return {
+          ...apiResult,
+          tag: apiResult[".tag"],
+          __typename: "FileEntry"
+        };
+      } catch (err) {
+        throw new Error(JSON.stringify(err));
+      }
+    }
+  },
+
   // This describes fields to *ADD IN* to the ones supplied
   FileEntry: {
     revisions: async (fileEntry, args, context, info) => {

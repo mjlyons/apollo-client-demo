@@ -9,6 +9,14 @@ export const typeDefs = gql`
     filesListFolder(path: String): [FileEntry!]!
   }
 
+  type Mutation {
+    """
+    Moves an existing file.
+    Returns resulting FileEntry if operation succeeded.
+    """
+    filesMove(fromPath: String!, toPath: String!): FileEntry
+  }
+
   """
   Describes a file.
   """
@@ -26,6 +34,10 @@ export const typeDefs = gql`
     Defines type of file entry (file, folder)
     """
     tag: String!
+    """
+    Fully qualified path of file in user's dropbox.
+    """
+    path_display: String!
   }
 
   """

@@ -6,4 +6,9 @@
 
 .fileName {
   background: lightblue;
+  padding: 8px;
+}
+
+.rename {
+  float: right;
 }
