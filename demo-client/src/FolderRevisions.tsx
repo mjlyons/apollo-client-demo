@@ -3,12 +3,9 @@ import pick from "lodash/pick";
 import { FolderRevisionsQuery } from "./gql-react/FolderRevisions";
 import { Rename } from "./Rename";
 
-interface IFolderRevisionsWithDataProps {
-  path: string;
-}
-export const FolderRevisionsWithData: React.SFC<
-  IFolderRevisionsWithDataProps
-> = props => (
+export const FolderRevisionsWithData: React.SFC<{
+  path?: string;
+}> = props => (
   <>
     <h1>{props.path || "/"}</h1>
     <FolderRevisionsQuery variables={{ path: props.path }}>

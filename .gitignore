@@ -25,4 +25,5 @@ yarn-error.log*
 
 # local-only settings
 .env*
+.vscode
 
