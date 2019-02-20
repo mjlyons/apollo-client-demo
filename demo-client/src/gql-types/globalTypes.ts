@@ -1,3 +1,5 @@
+export {}; // TODO: automatically handle when there's no global exports
+
 /* tslint:disable */
 /* eslint-disable */
 // This file was automatically generated and should not be edited.
