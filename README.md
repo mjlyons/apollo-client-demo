@@ -28,15 +28,22 @@ This example uses:
 
 This POC wraps three Dropbox API calls in a GraphQL schema. It's not intended to be a full GraphQL implementation of the Dropbox API:
 
-__common-src/schema.mjs:__
+**common-src/schema.mjs:**
+
 ```
 type Query {
   filesListFolder(path: String): [FileEntry!]!
 }
 
+type Mutation {
+  filesMove(fromPath: String!, toPath: String!): FileEntry
+}
+
+
 type FileEntry {
   id: ID!
   name: String!
+  path_display: String!
   revisions: [FileRevision!]!
   tag: String!
 }
@@ -48,19 +55,42 @@ type FileRevision {
 }
 ```
 
-- The `filesListFolder` resolver wraps Dropbox's [/files/list_folder](https://www.dropbox.com/developers/documentation/http/documentation#files-list_folder) REST endpoint
+- The `filesListFolder` query resolver wraps Dropbox's [/files/list_folder](https://www.dropbox.com/developers/documentation/http/documentation#files-list_folder) REST endpoint
+- The `filesMove` mutation resolver wraps Dropbox's [/files/move (v2)](https://www.dropbox.com/developers/documentation/http/documentation#files-move)
 - The `FileEntry.revisions` resolver wraps Dropbox's [/files/list_revisions](https://www.dropbox.com/developers/documentation/http/documentation#files-list_revisions) REST endpoint
 - The `FileRevision.temporaryDownloadLink` resolver wraps Dropbox's [/files/get_temporary_link](https://www.dropbox.com/developers/documentation/http/documentation#files-get_temporary_link) REST endpoint
 
 To get a temporary download link for every revision of a file in `path`, use this GraphQL query:
 
-__demo_client/src/FolderRevisions.jsx__:
+**demo_client/src/FolderRevisions.jsx**:
+
 ```
   query FolderRevisions($path: String) {
     filesListFolder(path: $path) {
       id
       name
       tag
+      path_display
+      revisions {
+        id
+        server_modified
+        temporaryDownloadLink
+      }
+    }
+  }
+```
+
+To rename a file and refresh that would change the query above, use this GraphQL mutation:
+
+**demo_client/src/Rename.jsx**:
+
+```
+  mutation RenameFile($fromPath: String!, $toPath: String!) {
+    filesMove(fromPath: $fromPath, toPath: $toPath) {
+      id
+      name
+      tag
+      path_display
       revisions {
         id
         server_modified
@@ -76,25 +106,28 @@ _Warning_: this is a proof of concept and is not meant for production. Anyone wi
 source code, the web client, or GraphQL server will have full read & write access to the
 /Apps/ApolloClientDemo folder in your Dropbox!
 
-__Clone this repo:__
+**Clone this repo:**
+
 ```
 git clone https://github.com/mjlyons/apollo-client-demo.git && cd apollo-client-demo
 ```
 
-__Configure your Dropbox App:__
+**Configure your Dropbox App:**
 
 - Create the Dropbox app
-  * Go to https://www.dropbox.com/developers/apps/create
-  * Select "Dropbox API" (not "Dropbox Business API")
-  * Choose "App folder" access (this will limit access to /Apps/ApolloClientDemo in your Dropbox)
-  * If you have a Personal and Work Dropbox, pick one.
-  * Click the "Create app" button
+
+  - Go to https://www.dropbox.com/developers/apps/create
+  - Select "Dropbox API" (not "Dropbox Business API")
+  - Choose "App folder" access (this will limit access to /Apps/ApolloClientDemo in your Dropbox)
+  - If you have a Personal and Work Dropbox, pick one.
+  - Click the "Create app" button
 
 - Get a Dropbox access token
-  * In your app settings, find the "OAuth2 section"
-  * Look for the "Generated access token" settings
-  * Click the "Generate" button
-  * Store the resulting token by creating `common-src/.env.mjs`:
+
+  - In your app settings, find the "OAuth2 section"
+  - Look for the "Generated access token" settings
+  - Click the "Generate" button
+  - Store the resulting token by creating `common-src/.env.mjs`:
 
   ```
   // Replace the Dropbox access token below
@@ -106,10 +139,11 @@ __Configure your Dropbox App:__
   ```
 
 - Put some files in your Dropbox's /Apps/ApolloClientDemo folder
-  * Store a few files using https://www.dropbox.com or Dropbox's desktop client.
-  * Save changes to the files and overwrite the originals (to create multiple file revisions)
+  - Store a few files using https://www.dropbox.com or Dropbox's desktop client.
+  - Save changes to the files and overwrite the originals (to create multiple file revisions)
 
-__Set up the client:__
+**Set up the client:**
+
 ```
 cd demo-client
 yarn install
@@ -118,8 +152,13 @@ yarn start
 
 This will open the web client in your browser. You should see an entry for each file in the /Apps/ApolloClientDemo folder. Each file will have a timestamp for each revision, and clicking the timestamp will download that revision of the file.
 
-__Set up the server (optional):__
+**Set up the server (optional):**
 You only need to set the server up if you want to run some or all of your query outside of the client (options 2 & 3 at start of README).
+
+First, create a service called `apollo-client-demo` on [Apollo Engine](https://engine.apollographql.com). It will instruct you to create a `.env` file. Put a copy of that file in `/demo-server` (for reporting stats) and in `/demo-client` (for using the [VSCode plugin](https://marketplace.visualstudio.com/items?itemName=apollographql.vscode-apollo)).
+
+Next, start up the server:
+
 ```
 cd ../demo-server
 yarn install
@@ -136,6 +175,7 @@ You should be able to visit [http://localhost:4000](http://localhost:4000) and r
       id
       name
       tag
+      path_display
       revisions {
         id
         server_modified
@@ -164,17 +204,17 @@ to see it. You'll notice that the Dropbox REST API calls are parallelizing. As s
 
 ### Using Apollo Client Devtools without a GraphQL server
 
-First, make sure you've installed [Apollo Client Devtools](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm) in Chrome. Then switch to the "Apollo" tab  and click the "Queries" icon. You should see the FolderRevisions GraphQL query powering the UX. Click the "Cache" icon next. You should see cached entries for the root query, each FileEntry (represents a file) and each FileRevision (represents a revision of a file).
+First, make sure you've installed [Apollo Client Devtools](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm) in Chrome. Then switch to the "Apollo" tab and click the "Queries" icon. You should see the FolderRevisions GraphQL query powering the UX. Click the "Cache" icon next. You should see cached entries for the root query, each FileEntry (represents a file) and each FileRevision (represents a revision of a file).
 
 ### REST API response caching
 
 Let's see what happens if we try to reload the same data from the GraphQL query by the folder contents twice.
 
-In __demo-client/src/App.js__, find this block of code:
+In **demo-client/src/App.js**, find this block of code:
 
 ```
 {/* Loading from root again to see if it triggers additional Dropbox API requests -- it shouldn't */}
-{/* 
+{/*
 <hr />
 <FolderRevisionsWithData />
 */}
@@ -191,13 +231,15 @@ and uncomment it to look like this:
 When you save and reload, you'll see the contents of the folder twice. However, there are no additional network requests in the "network" tab. Apollo Client is correctly caching the responses and
 preventing unnecessary network requests.
 
+The cache is updated when mutations modify existing items in the cache and return updated data. For example, executing the `filesMove` mutation automatically updates the `FolderRevisions` query. There's no need to add new code, such as a response handler, to update the cache.
+
 ### Switching to the GraphQL server
 
-Translating the GraphQL query to REST API requests on the client has a downside: you need to make multiple round trips to load your data. Switching to the GraphQL server will shrink the client's network roundtrips down to one request. 
+Translating the GraphQL query to REST API requests on the client has a downside: you need to make multiple round trips to load your data. Switching to the GraphQL server will shrink the client's network roundtrips down to one request.
 
 To switch to the GraphQL server, start the server and remove the `@client` directive from the GraphQL query.
 
-In __demo-client/src/FolderRevisions.jsx__ find the query:
+In **demo-client/src/FolderRevisions.jsx** find the query:
 
 ```
 const FILES_LIST_FOLDER_QUERY = gql`
@@ -206,6 +248,7 @@ const FILES_LIST_FOLDER_QUERY = gql`
       id
       name
       tag
+      path_display
       revisions {
         id
         server_modified
@@ -225,6 +268,7 @@ const FILES_LIST_FOLDER_QUERY = gql`
       id
       name
       tag
+      path_display
       revisions {
         id
         server_modified
@@ -238,7 +282,6 @@ const FILES_LIST_FOLDER_QUERY = gql`
 The `@client` tells Apollo Client to resolve the GraphQL client locally. Removing it causes Apollo Client to send the query to the GraphQL server.
 
 After saving and reloading, look at Chrome's "network" tab. You should notice a new request to `http://localhost:4000`. You can see the GraphQL query in the request body and the full result in the response.
-
 
 ### Running part of the query on the GraphQL server (gradual rollout)
 
@@ -255,6 +298,7 @@ const FILES_LIST_FOLDER_QUERY = gql`
       id
       name
       tag
+      path_display
       revisions @client {
         id
         server_modified
@@ -273,13 +317,13 @@ query FolderRevisions($path: String) {
     id
     name
     tag
+    path_display
     __typename
   }
 }
 ```
 
 You'll also see the client is making `list_revisions` and `get_temporary_link` REST API calls again.
-
 
 ### Gradually ramping up traffic to your GraphQL server
 

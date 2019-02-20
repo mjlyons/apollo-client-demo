@@ -6,7 +6,7 @@ import { Rename } from "./Rename";
 
 const FILES_LIST_FOLDER_QUERY = gql`
   query FolderRevisions($path: String) {
-    filesListFolder(path: $path) @client {
+    filesListFolder(path: $path) {
       id
       name
       path_display

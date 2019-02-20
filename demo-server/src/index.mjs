@@ -1,6 +1,7 @@
 import ApolloServerModule from "apollo-server";
 import DropboxModule from "dropbox";
 import fetch from "node-fetch";
+import dotenv from "dotenv";
 
 const { typeDefs } = SchemaModule;
 const { ApolloServer } = ApolloServerModule;
@@ -10,6 +11,9 @@ import SchemaModule from "./common-src/schema";
 import resolvers from "./common-src/resolvers";
 import CommonEnv from "./common-src/.env";
 
+dotenv.config();
+const engine = { apiKey: process.env.ENGINE_API_KEY };
+
 (async () => {
   const dataSources = () => ({
     dropboxAPI: new Dropbox({
@@ -17,7 +21,7 @@ import CommonEnv from "./common-src/.env";
       fetch
     })
   });
-  const server = new ApolloServer({ typeDefs, resolvers, dataSources });
+  const server = new ApolloServer({ typeDefs, resolvers, dataSources, engine });
   const { url } = await server.listen();
   console.log(`🚀 Server ready at ${url}`);
 
